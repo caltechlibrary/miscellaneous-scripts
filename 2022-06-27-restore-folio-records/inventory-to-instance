@@ -1,0 +1,9 @@
+#!/bin/bash
+# Remove fields that are parent of inventory records and not instance
+# records.
+
+infile="$1"
+outfile="$2"
+jq 'walk(if type == "object" then del(.parentInstances, .childInstances, .isBoundWith, .precedingTitles, .succeedingTitles, .links, .tags, .["@context"]) else . end)' $infile > $outfile
+
+

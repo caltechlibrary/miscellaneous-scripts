@@ -1,0 +1,22 @@
+#!/bin/bash -x
+
+read_creds() {
+    okapi_url=$(awk -F '=' '{if (! ($0 ~ /^#/) && $0 ~ /FOLIO_OKAPI_URL/) print $2}' $1 | tr -d ' ' | tail -n1)
+    tenant=$(awk -F '=' '{if (! ($0 ~ /^#/) && $0 ~ /FOLIO_OKAPI_TENANT_ID/) print $2}' $1 | tr -d ' ' | tail -n1)
+    okapi_token=$(awk -F '=' '{if (! ($0 ~ /^#/) && $0 ~ /FOLIO_OKAPI_TOKEN/) print $2}' $1 | tr -d ' ' | tail -n1)
+}
+
+read_creds settings.ini
+
+file="$1"
+uuid=$(jq .id $file | tr -d '"')
+
+apicall=$(curl --http1.1 -s -w '\n' -X PUT \
+	  -H "Content-type: application/json" \
+          -H "Accept: text/plain" \
+          -H "X-Okapi-Tenant: ${tenant}" \
+          -H "x-okapi-token: ${okapi_token}" \
+          -d @${file} \
+	  "${okapi_url}/instance-storage/instances/${uuid}")
+
+echo $apicall | jq .
