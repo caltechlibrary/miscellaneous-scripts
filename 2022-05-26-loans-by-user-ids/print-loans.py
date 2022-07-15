@@ -50,16 +50,23 @@ for index, user_id in enumerate(user_ids):
         (result, error) = net('get', url, headers = headers)
         if error:
             sys.exit('Got error: ' + str(error))
-        items[item_id] = json.loads(result.text)['items'][0]
+        if 'items' in json.loads(result.text) and json.loads(result.text)['items']:
+            items[item_id] = json.loads(result.text)['items'][0]
+        else:
+            print('could not look up item ' + item_id)
     print(str(index).zfill(3), flush = True)
 
 for user_id in users:
     r = users[user_id]
     cituid = r['barcode'].lstrip('0')
-    print('\nuser ' + cituid + ' (' + r['personal']['lastName'] + '):')
+    print('\nuser ' + cituid + ' (' + r['personal']['lastName'] + ', ' + r['personal']['email'] + '):')
     if user_id in loans:
         for loan in loans[user_id]:
-            item = items[loan['itemId']]
+            if loan['itemId'] in items:
+                item = items[loan['itemId']]
+            else:
+                print('  item with id ' + loan['itemId'] + ' but this item does not exist in Folio')
+                continue
             title = item['title']
             if len(title) > 60:
                 title = title[0:60] + ' ...'
